@@ -146,6 +146,10 @@ object WallService {
         }
     }
 
+    fun getPostById(postId: Int): Post? {
+        return posts.find { it.id == postId }
+    }
+
 
 
     fun clear() {
