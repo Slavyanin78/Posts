@@ -2,9 +2,14 @@ package ru.netology
 
 
 
+
 fun main(){
     WallService.add(Post(1, 0, 0, 0, "Hello",0))
     WallService.add(Post(2, 0, 0, 0,"Bay"))
+    WallService.printPosts()
+
+    WallService.createComment(1, Comment(1, "First comment"))
+    WallService.createComment(1, Comment(2, "Second comment"))
     WallService.printPosts()
 
 
@@ -18,7 +23,7 @@ data class Post(
     val date: Int = 0,
     val text: String = "",
     val replyOwnerId: Int? = null,
-    val comments: Comments = Comments(),
+    val comments: MutableList<Comment> = mutableListOf(),
     val likes: Likes = Likes(),
     val reposts: Reposts = Reposts(),
     val views: Views = Views(),
@@ -26,16 +31,15 @@ data class Post(
 )
 
 // Classes for object fields
-data class Comments(
-    val count: Int = 0,
-    val canPost: Boolean = false,
-    val groupsCanPost: Boolean = false,
-    val canClose: Boolean = false,
-    val canOpen: Boolean = false
+data class Comment(
+    val id: Int = 0,
+    val text: String
+
+
 )
 
 data class Likes(
-    val count: Int = 0,
+    var counter: Int = 0,
     val userLikes: Boolean = false,
     val canLike: Boolean = false,
     val canPublish: Boolean = false
@@ -54,11 +58,11 @@ data class Views(
 abstract class Attachment(val type: String)
 
 // Classes for specific types of Attachment
-class PhotoAttachment(type: String, val photo: Photo) : Attachment(type)
-class VideoAttachment(type: String, val video: Video) : Attachment(type)
-class AudioAttachment(type: String, val audio: Audio) : Attachment(type)
-class DocumentAttachment(type: String, val document: Document) : Attachment(type)
-class LinkAttachment(type: String, val link: Link) : Attachment(type)
+class PhotoAttachment( val photo: Photo) : Attachment("photo")
+class VideoAttachment( val video: Video) : Attachment("video")
+class AudioAttachment( val audio: Audio) : Attachment("audio")
+class DocumentAttachment( val document: Document) : Attachment("document")
+class LinkAttachment( val link: Link) : Attachment("link")
 
 // Classes for data inside Attachments
 data class Photo(
@@ -96,10 +100,16 @@ data class Link(
     val caption: String
 )
 
+class PostNotFoundException(message: String) : Exception(message)
+
+
 // WallService object
 object WallService {
     private var nextId = 1
     private var posts = emptyArray<Post>()
+    private var comments = emptyArray<Comment>()
+
+
 
     fun add(post: Post): Post {
         val newPost = post.copy(id = nextId)
@@ -121,6 +131,23 @@ object WallService {
         return false
     }
 
+    var commentIdCounter = 1
+
+
+    fun createComment(postId: Int, comment: Comment): Comment {
+        val postIndex = posts.indexOfFirst { it.id == postId }
+        if (postIndex != -1) {
+            val updatedPost = posts[postIndex].copy(comments = posts[postIndex].comments.toMutableList().apply { add(comment) })
+            posts[postIndex] = updatedPost
+            commentIdCounter++
+            return comment.copy(id = commentIdCounter)
+        } else {
+            throw PostNotFoundException("Post with id $postId not found")
+        }
+    }
+
+
+
     fun clear() {
         nextId = 1
         posts = emptyArray()
@@ -128,7 +155,10 @@ object WallService {
 
     fun printPosts() {
         for (post in posts) {
-            println("id: post.id, text:post.text, attachments: post.attachments.toList()")
+            println("id: ${post.id}, text: ${post.text}, attachments: ${post.attachments.joinToString()}")
+            for (comment in post.comments) {
+                println("  Comment id: ${comment.id}, text: ${comment.text}")
+            }
         }
     }
 
