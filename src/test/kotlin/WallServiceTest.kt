@@ -39,6 +39,7 @@ class WallServiceTest {
 
     @Test
     fun testCreateComment() {
+        WallService.clear()
         // Arrange
         val post = Post(1, 1, 0, 0, "Hello, world!")
         val comment = Comment(1, "Nice post!")
@@ -47,16 +48,17 @@ class WallServiceTest {
         WallService.add(post)
         WallService.createComment(1, comment)
 
+
         // Assert
-        val expectedPost = Post(1, 1, 0, 0, "Hello, world!")
-        assertEquals(
-            expectedPost,
-            WallService.getPostById(1)
-        )
+        val expectedPost = post.copy(comments = mutableListOf(comment))
+
+        assertEquals(expectedPost, WallService.getPostById(1))
+
     }
 
     @Test
     fun testCreateCommentForNonExistingPost() {
+        WallService.clear()
         // Создаем новый комментарий
         val newComment = Comment(1, "New comment")
 
